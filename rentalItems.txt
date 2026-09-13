@@ -1,0 +1,12 @@
+# database that stores all rental items
+# code, name, category, price, rental mode
+
+
+EQ001, Badminton Racket, Equipment, 10.00, Per Racket
+EQ002, Football, Equipment, 8.00, Per Ball
+EQ003, Basketball, Equipment, 8.00, Per Ball
+EQ004, Table Tennis Paddle Set, Equipment, 12.00, Per Set
+FC001, Badminton Court, Facility/Court Package, 20.00, Per Hour
+FC002, Basketball Court, Facility/Court Package, 50.00, Per Hour
+AD001, Sports Towel, Accessory/Add-on, 5.00, Per Towel
+AD002, Locker Rental, Accessory/Add-on Service, 3.00, Per Day

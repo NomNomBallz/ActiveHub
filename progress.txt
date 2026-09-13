@@ -1,0 +1,45 @@
+- 8 rental items
+- 4 equipments:
+    - Racket
+    - Basketball Shoes
+    - Badminton Shoes
+    - Basketball
+
+
+- 2 facilities:
+    -Badminton Court
+    -Basketball Court
+
+
+
+- 2 accesories or add-on:
+    - Locker rental
+    - Towel
+
+
+| Item Code | Item Name               | Category                   |      Rental Price |
+| --------- | ----------------------- | -------------------------- | ----------------: |
+| EQ001     | Badminton Racket        | Equipment                  | RM 10.00 / racket |
+| EQ002     | Football                | Equipment                  |    RM 8.00 / ball |
+| EQ003     | Basketball              | Equipment                  |    RM 8.00 / ball |
+| EQ004     | Table Tennis Paddle Set | Equipment                  |    RM 12.00 / set |
+| FC001     | Badminton Court         | Facility / Court Package   |   RM 20.00 / hour |
+| FC002     | Basketball Court        | Facility / Court Package   |   RM 50.00 / hour |
+| AD001     | Sports Towel            | Accessory / Add-on         |   RM 5.00 / towel |
+| AD002     | Locker Rental           | Accessory / Add-on Service |     RM 3.00 / day |
+
+
+Plans:
+- make item class with all the attributes - done
+- make item list - done
+- methods needed:
+    - create item - done
+    - display catalogue - done
+    - getPrice(itemCode) - not yet
+    - 
+-Read txt file: - done
+    -Read 1 line, create rental item object  - done
+    -Store rental Item object in Arraylist - done
+
+
+Plans:
