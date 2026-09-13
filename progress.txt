@@ -1,3 +1,5 @@
+# ignore this, im using this as like a pseudocode for me
+
 - 8 rental items
 - 4 equipments:
     - Racket
