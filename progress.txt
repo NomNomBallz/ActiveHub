@@ -45,3 +45,61 @@ Plans:
 
 
 Plans:
+-Promotion module: - done
+    -Check promotion condition - done
+    -apply promotion - done
+    -Promotion A: - done
+        -Mon - Fri at or after 9am and before 4pm - done
+        - 15% discount on court or facility charge - done
+    - Promotion B: - done
+        - if 8 or above people \, deduct rm5 for each person, max rm60 deduction. facility chrage must be 0 or above - done
+
+    - Promotion C: - done
+        - if transaction contains 1 facility, and 3 equipments give rm20 discount - done
+
+Plans:
+-convert the promotion module into abstract class. - done
+-make promotion abstract class:
+    -give calculateDiscount method
+-create promotion display ui
+
+
+    ===== PROMOTION MODULE =====
+
+Booking Date       : Monday, 21 September 2026
+Booking Time       : 2:00 PM
+Participants       : 10
+
+Facility/Court Charge     : RM200.00
+Equipment Charge          : RM50.00
+Accessory/Service Charge  : RM20.00
+Subtotal                  : RM270.00
+
+
+Eligible Promotions:
+[A] Off-Peak Saver
+    Saving: RM30.00
+
+[B] Team Booking Reward
+    Saving: RM50.00
+
+[C] Equipment Bundle Discount
+    Saving: RM20.00
+
+
+Selected Promotion:
+[B] Team Booking Reward
+
+Discount Amount: RM50.00
+
+Subtotal after Discount: RM220.00
+Service Charge (10%): RM22.00
+
+Final Payable Amount: RM242.00
+
+
+
+
+
+
+
