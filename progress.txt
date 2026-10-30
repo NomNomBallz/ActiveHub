@@ -1,5 +1,11 @@
 # ignore this, im using this as like a pseudocode for me
 
+jayvan section
+==
+agenda for me: 
+turn the menu into a module that the user can just call for convenience sake
+==
+
 - 8 rental items
 - 4 equipments:
     - Racket
