@@ -6,7 +6,6 @@ public class main {
     static rentalCatalogue rentalCatalogue = new rentalCatalogue();
     static bookingManager bookingManager = new bookingManager();
 
-
     public static void main(String[] args) {
         
         boolean loop = true;

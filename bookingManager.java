@@ -119,7 +119,7 @@ public class bookingManager {
 
     //saves the data in current memory to the txt file
     private void saveBookings(){
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter("bookings.txt"))){
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("ActiveHub/bookings.txt"))){
             //for every object (bookingEntry) in the arraylist (bookings), get all of the data and put in bookings.txt 
             for (booking bookingEntry : bookings){
                 writer.write(bookingEntry.convertToFileString());
