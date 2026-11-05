@@ -1,13 +1,13 @@
 import java.time.*;
 
-public class booking {
+public class Booking {
     private String bookingID, custName, contactNo, facilityType, status;
     private int numberOfParticipants;
     private LocalDate bookingDate;
     private LocalTime startTime, endTime;
 
     // constructor
-    public booking(String id, String name, String contact, String facility, int participantqty, LocalDate date,
+    public Booking(String id, String name, String contact, String facility, int participantqty, LocalDate date,
             LocalTime start, LocalTime end, String status) {
 
         setBookingID(id); // B001, B002, etc

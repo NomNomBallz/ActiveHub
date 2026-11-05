@@ -1,4 +1,4 @@
-public class rentalItem {
+public class RentalItem {
 
     // attributes
     private String code;
@@ -9,7 +9,7 @@ public class rentalItem {
 
     // contructor
 
-    public rentalItem(String code, String name, String category, double price, String rentalMode) {
+    public RentalItem(String code, String name, String category, double price, String rentalMode) {
 
         this.code = code;
         this.name = name;

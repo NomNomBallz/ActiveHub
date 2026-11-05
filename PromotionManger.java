@@ -1,15 +1,36 @@
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 class PromotionManager {
 
-    static Promotion chooseBest(Promotion[] promotions) {
+    public static void applyBestPromotion(TransactionRental transaction, Booking booking){
+        LocalTime bookingTime = (booking != null) ? booking.getStartTime() : LocalTime.now();
+        DayOfWeek bookingDay = (booking != null) ? booking.getBookingDate().getDayOfWeek() : LocalDate.now().getDayOfWeek();
+        int pax = (booking != null) ? booking.getNumParticipants() : 1;
+
+        Promotion[] promotions = new Promotion[] {
+            new PromotionA(bookingTime, bookingDay),
+            new PromotionB(pax),
+            new PromotionC()
+        };
+
+        Promotion best = chooseBest(promotions, transaction);
+
+        if (best != null){
+            transaction.setDiscountAmount(best.getDeduction());
+            transaction.setPromotionName(best.getLabel());
+        } else {
+            transaction.setDiscountAmount(0.0);
+            transaction.setPromotionName("None");
+        }
+    }
+
+    public static Promotion chooseBest(Promotion[] promotions, TransactionRental transaction) {
         Promotion best = null;
         for (Promotion p : promotions) {
-            if (p.isApplicable()) {
-                p.calculateDeduction();
+            if (p.isApplicable(transaction)) {
+                p.calculateDeduction(transaction);
                 if (best == null || p.getDeduction() > best.getDeduction()) {
                     best = p; // strict > keeps A over B over C on ties
                 }
@@ -18,55 +39,52 @@ class PromotionManager {
         return best; // null if nothing applies
     }
 
-    static void displayPromotionInfo(Promotion[] promotions, Promotion best) {
+    public static void displayPromotionInfo(TransactionRental transaction, Booking booking) {
 
-        // TEMPORARY: replace these with getters once Booking / RentalTransaction exist
-        LocalDate bookingDate = LocalDate.of(2026, 10, 5); // a Monday
+        LocalTime bookingTime = (booking != null) ? booking.getStartTime() : LocalTime.now();
+        LocalDate bookingDate = (booking != null) ? booking.getBookingDate() : LocalDate.now();
         DayOfWeek bookingDay = bookingDate.getDayOfWeek();
-        LocalTime bookingTime = LocalTime.of(14, 30);
-        int pax = 9;
-        double facilityTotal = 40.00;
-        double equipmentTotal = 20.00;
-        double accessoryTotal = 0.00;
+        int pax = (booking != null) ? booking.getNumParticipants() : 1;
 
-        double subtotal = facilityTotal + equipmentTotal + accessoryTotal;
+        Promotion[] promotions = new Promotion[] {
+            new PromotionA(bookingTime, bookingDay),
+            new PromotionB(pax),
+            new PromotionC()
+        };
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("===== PROMOTION MODULE =====\n\n");
-        sb.append(String.format("Booking Date       : %s, %s%n", bookingDay,
-                bookingDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))));
-        sb.append(String.format("Booking Time       : %s%n",
-                bookingTime.format(DateTimeFormatter.ofPattern("h:mm a"))));
-        sb.append(String.format("Participants       : %d%n%n", pax));
+        Promotion best = chooseBest(promotions, transaction);
 
-        sb.append(String.format("Facility/Court Charge     : RM%.2f%n", facilityTotal));
-        sb.append(String.format("Equipment Charge          : RM%.2f%n", equipmentTotal));
-        sb.append(String.format("Accessory/Service Charge  : RM%.2f%n", accessoryTotal));
-        sb.append(String.format("Subtotal                  : RM%.2f%n%n", subtotal));
+        System.out.println("====================================================");
+        System.out.println("               PROMOTION EVALUATION                 ");
+        System.out.println("====================================================");
+        System.out.printf("Booking Date  : %s (%s)%n", bookingDate, bookingDay);
+        System.out.printf("Booking Time  : %s%n", bookingTime);
+        System.out.printf("Participants  : %d%n", pax);
+        System.out.printf("Gross Subtotal: RM %.2f%n", transaction.calcSubtotal());
+        System.out.println("----------------------------------------------------");
+        System.out.println("Eligible Promotions Breakdown:");
 
-        sb.append("Eligible Promotions:\n");
+        boolean anyApplicable = false;
         for (Promotion p : promotions) {
-            if (p.isApplicable()) {
-                sb.append(p.getLabel()).append("\n");
-                sb.append(String.format("    Saving: RM%.2f%n%n", p.calculateDeduction()));
+            if (p.isApplicable(transaction)) {
+                anyApplicable = true;
+                double saving = p.calculateDeduction(transaction);
+                boolean isWinner = (best != null && p.getLabel().equals(best.getLabel()));
+                
+                System.out.printf("  * %-32s -> Saves RM %6.2f %s%n", 
+                        p.getLabel(), 
+                        saving, 
+                        (isWinner ? "[SELECTED]" : ""));
             }
         }
 
-        if (best == null) {
-            sb.append("No promotion applicable.\n");
-            System.out.print(sb);
-            return;
+        if (!anyApplicable) {
+            System.out.println("  [No promotional discounts apply for this transaction]");
+        } else {
+            System.out.println("----------------------------------------------------");
+            System.out.printf("Applied Promotion : %s%n", best.getLabel());
+            System.out.printf("Total Discount    : RM %.2f%n", best.getDeduction());
         }
-
-        double afterDiscount = subtotal - best.getDeduction();
-        double serviceCharge = afterDiscount * 0.10;
-
-        sb.append("Selected Promotion:\n").append(best.getLabel()).append("\n\n");
-        sb.append(String.format("Discount Amount: RM%.2f%n%n", best.getDeduction()));
-        sb.append(String.format("Subtotal after Discount: RM%.2f%n", afterDiscount));
-        sb.append(String.format("Service Charge (10%%): RM%.2f%n%n", serviceCharge));
-        sb.append(String.format("Final Payable Amount: RM%.2f%n", afterDiscount + serviceCharge));
-
-        System.out.print(sb);
+        System.out.println("====================================================\n");
     }
 }

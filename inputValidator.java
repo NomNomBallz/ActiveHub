@@ -2,7 +2,7 @@ import java.util.*;
 import java.time.*;
 import java.time.format.DateTimeParseException;
 
-public class inputValidator {
+public class InputValidator {
     
     //validation for String
     public static String readString(Scanner scanner, String prompt){
@@ -20,7 +20,6 @@ public class inputValidator {
 
     //validation for int
     public static int readInt(Scanner scanner, String prompt){
-        String input;
         while(true){
             try{
                 System.out.print(prompt + ": ");

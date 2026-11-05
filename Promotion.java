@@ -2,19 +2,10 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 abstract class Promotion {
-    protected double facilityTotal;
-    protected int pax;
     protected double deduction;
 
-    Promotion(double facilityTotal, int pax) {
-        this.facilityTotal = facilityTotal;
-        this.pax = pax;
-    }
-
-    abstract boolean isApplicable(); // each promotion has its own rule
-
-    abstract double calculateDeduction(); // each promotion has its own maths
-
+    abstract boolean isApplicable(TransactionRental transaction); // each promotion has its own rule
+    abstract double calculateDeduction(TransactionRental transaction); // each promotion has its own maths
     abstract String getLabel();
 
     public double getDeduction() {
@@ -28,23 +19,23 @@ abstract class Promotion {
 }
 
 class PromotionA extends Promotion {
-    PromotionA(double facilityTotal, int pax) {
-        super(facilityTotal, pax);
+    private LocalTime bookingTime;
+    private DayOfWeek bookingDay;
+
+    PromotionA(LocalTime time, DayOfWeek day) {
+        bookingTime = time;
+        bookingDay = day;
     }
 
     @Override
-    boolean isApplicable() {
-        LocalTime bookingTime = LocalTime.of(14, 30);
-        DayOfWeek bookingDay = DayOfWeek.MONDAY;
+    boolean isApplicable(TransactionRental transaction) {
 
-        // Checking booking time if its Mon - Fri (9am -4pm)
+        // Checking booking time if its Mon - Fri (9am - 4pm)
+        boolean isWeekday = bookingDay != DayOfWeek.SATURDAY && bookingDay != DayOfWeek.SUNDAY;
+        boolean isOffPeakHour = !bookingTime.isBefore(LocalTime.of(9,0)) && bookingTime.isBefore(LocalTime.of(16,0));
 
-        if (bookingDay != DayOfWeek.SATURDAY &&
-                bookingDay != DayOfWeek.SUNDAY &&
-                !bookingTime.isBefore(LocalTime.of(9, 0)) &&
-                bookingTime.isBefore(LocalTime.of(16, 0))) {
-
-            calculateDeduction();
+        if (isWeekday && isOffPeakHour) {
+            calculateDeduction(transaction);
             return true;
 
         }
@@ -53,8 +44,8 @@ class PromotionA extends Promotion {
     }
 
     @Override
-    double calculateDeduction() {
-        deduction = facilityTotal * 0.15; // direct access to the protected field
+    double calculateDeduction(TransactionRental transaction) {
+        deduction = transaction.getFacilityTotal() * 0.15;
         return deduction;
     }
 
@@ -65,19 +56,25 @@ class PromotionA extends Promotion {
 }
 
 class PromotionB extends Promotion {
-    PromotionB(double facilityTotal, int pax) {
-        super(facilityTotal, pax);
+    private int pax;
+    
+    PromotionB(int pax) {
+        this.pax = pax;
     }
 
     @Override
-    boolean isApplicable() {
-        return pax >= 8;
+    boolean isApplicable(TransactionRental transaction) {
+        if (pax >= 8 && transaction.getFacilityTotal() > 0){
+            calculateDeduction(transaction);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    double calculateDeduction() {
+    double calculateDeduction(TransactionRental transaction) {
         // ensure deduction is below rm60 and ensure facilityTotal is not below 0
-        deduction = Math.min(Math.min(pax * 5, 60), facilityTotal);
+        deduction = Math.min(Math.min(pax * 5, 60), transaction.getFacilityTotal());
         return deduction;
 
     }
@@ -89,33 +86,31 @@ class PromotionB extends Promotion {
 }
 
 class PromotionC extends Promotion {
-    PromotionC(double facilityTotal, int pax) {
-        super(facilityTotal, pax);
-    }
 
     @Override
-    boolean isApplicable() {
+    boolean isApplicable(TransactionRental transaction){
 
-        // Check if there is 1 facility and 3 equipement in a single transaction
+        // Check if there is 1 facility and 3 equipment in a single transaction
 
+        int equipmentCount = 0;
 
-        //TEMPORARY:
-        //replace with getters once the relevant modules exst
-        int noFacility = 2;
-        int noEquipment = 3;
+        for (TransactionItem ti : transaction.getItems()){
+            if (ti.getItem().getCategory().equalsIgnoreCase("EQUIPMENT")){
+                equipmentCount += ti.getQuantity();
+            }
+        }
 
+        boolean hasFacility = transaction.getFacilityTotal() > 0;
 
-
-        if (noFacility > 0 && noEquipment >= 3) {
-            calculateDeduction();
+        if (hasFacility && equipmentCount >= 3) {
+            calculateDeduction(transaction);
             return true;
-
         }
         return false;
     }
 
     @Override
-    double calculateDeduction() {
+    double calculateDeduction(TransactionRental transaction) {
         deduction = 20;
         return deduction;
     }

@@ -2,13 +2,25 @@ import java.time.*;
 import java.util.*;
 import java.io.*;
 
-public class bookingManager {
-    private ArrayList<booking> bookings;
+public class BookingManager {
+    private ArrayList<Booking> bookings;
 
-    public bookingManager(){
+    public BookingManager(){
         bookings = new ArrayList<>();
         loadBookings();
     }   
+
+    //returns booking object
+    public Booking findBookingByID(String id){
+        if (id == null) return null;
+
+        for (Booking booking : bookings){
+            if (booking.getBookingID().equalsIgnoreCase(id.trim())){
+                return booking;
+            }
+        }
+        return null;
+    }
     
     //pretty self explanatory
     public boolean createBooking(String name, String contact, String facility, int participantqty, LocalDate date,
@@ -22,7 +34,7 @@ public class bookingManager {
 
         String tempID = generateBookingID();
 
-        booking newBooking = new booking(tempID, name, contact, facility, participantqty,
+        Booking newBooking = new Booking(tempID, name, contact, facility, participantqty,
         date, start, end, "RESERVED");
         
         bookings.add(newBooking);
@@ -34,8 +46,8 @@ public class bookingManager {
 
     //cancel a booking by entering its ID
     public boolean cancelBooking(String bookingID){
-        for (booking bookingEntry : bookings ){
-            if (bookingEntry.getBookingID().equalsIgnoreCase(bookingID)){
+        for (Booking bookingEntry : bookings ){
+            if (bookingEntry.getBookingID().equalsIgnoreCase(bookingID.trim())){
 
                 if ("CANCELLED".equalsIgnoreCase(bookingEntry.getStatus())){
                     System.out.println("Booking " + bookingID + " is already cancelled!");
@@ -60,7 +72,7 @@ public class bookingManager {
         System.out.printf("%-6s | %-18s | %-12s | %-10s | %-13s | %-12s | %-18s | %-10s%n", "ID", "Customer Name", "Contact", "Date", "Time Slot", "Participants", "Facility", "Status");
         System.out.println("========================================================================================================================");
 
-        for (booking bookingEntry : bookings){
+        for (Booking bookingEntry : bookings){
             String timeSlot = bookingEntry.getStartTime() + " - " + bookingEntry.getEndTime();
             
             System.out.printf("%-6s | %-18s | %-12s | %-10s | %-13s | %-12d | %-18s | %-10s%n",
@@ -78,7 +90,7 @@ public class bookingManager {
 
     }
 
-    //helper method for the view all bookings method
+    //helper method for view all bookings, shortens names/strings that are too long
     private String truncate(String text, int width){
         if (text != null && text.length() > width){
             return text.substring(0, width - 3) + "...";
@@ -89,7 +101,7 @@ public class bookingManager {
     //check to see if any bookings conflict or not. if conflicting, return true
     private boolean isItBooked(String facility, LocalDate date, LocalTime start, LocalTime end){
 
-        for (booking bookingEntry : bookings){
+        for (Booking bookingEntry : bookings){
 
             if ("CANCELLED".equalsIgnoreCase(bookingEntry.getStatus())){
                 continue;
@@ -121,7 +133,7 @@ public class bookingManager {
     private void saveBookings(){
         try(BufferedWriter writer = new BufferedWriter(new FileWriter("ActiveHub/bookings.txt"))){
             //for every object (bookingEntry) in the arraylist (bookings), get all of the data and put in bookings.txt 
-            for (booking bookingEntry : bookings){
+            for (Booking bookingEntry : bookings){
                 writer.write(bookingEntry.convertToFileString());
                 writer.newLine();
             }
@@ -159,7 +171,7 @@ public class bookingManager {
                 String status = bookingInfo[8];
 
                 //put it into the running arraylist
-                booking booking = new booking(id, name, contact, facility, participantqty, date, startTime, endTime, status);
+                Booking booking = new Booking(id, name, contact, facility, participantqty, date, startTime, endTime, status);
                 bookings.add(booking);
 
             }

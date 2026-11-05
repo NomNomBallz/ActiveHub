@@ -3,7 +3,10 @@
 jayvan section
 ==
 agenda for me: 
-turn the menu into a module that the user can just call for convenience sake
+- booking objects can be directly converted into rental transactions
+- payment module and its subclasses purely exists just for show,
+ just set the transaction to "PAID" and "Customer paid by e-wallet" or smth etc.
+- PLSPLSPLSPLSPLS MAKE BOOKING CLASS USE THE SAME COUNTER
 ==
 
 - 8 rental items

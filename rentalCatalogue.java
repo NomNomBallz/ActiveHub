@@ -2,14 +2,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Scanner;
 
-public class rentalCatalogue {
+
+public class RentalCatalogue {
 
     // create arraylist
-    private ArrayList<rentalItem> rentalItems = new ArrayList<rentalItem>();
+    private ArrayList<RentalItem> rentalItems = new ArrayList<RentalItem>();
 
-    public rentalCatalogue() {
+    public RentalCatalogue() {
 
         // Read txt file
         Path filePath = Path.of("ActiveHub/rentalItems.txt");
@@ -31,7 +31,7 @@ public class rentalCatalogue {
                 String[] itemAttributes = line.split(", ");
 
                 // Create the rentalItems object using the itemAttributes array
-                rentalItem itemObj = new rentalItem(itemAttributes[0], itemAttributes[1], itemAttributes[2],
+                RentalItem itemObj = new RentalItem(itemAttributes[0], itemAttributes[1], itemAttributes[2],
                         Double.parseDouble(itemAttributes[3]), itemAttributes[4]);
 
                 rentalItems.add(itemObj);
@@ -44,6 +44,18 @@ public class rentalCatalogue {
 
     }
 
+    //find a specific Item in the arraylist and returns it by code
+    public RentalItem findItemByCode(String code){
+        if (code == null) return null;
+
+        for (RentalItem item : rentalItems){
+            if (item.getCode().equalsIgnoreCase(code.trim())){
+                return item;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
 
@@ -52,11 +64,11 @@ public class rentalCatalogue {
         String category;
         double price;
         String rentalMode;
-        rentalItem rentalItem;
+        RentalItem rentalItem;
 
-        String stringCatalogue = String.format("| %-9s | %-24s | %-27s | %20s |%n", "Item Code", "Item Name",
+        String stringCatalogue = String.format("\n| %-9s | %-24s | %-15s | %-20s |%n", "Item Code", "Item Name",
                 "Category", "Rental Price") +
-                "| --------- | ------------------------ | --------------------------- | -------------------: |\n";
+                "| --------- | ------------------------ | --------------- | -------------------- |\n";
 
         for (int i = 0; i < rentalItems.size(); i++) {
 
@@ -69,7 +81,7 @@ public class rentalCatalogue {
 
             String priceStr = String.format("RM %.2f %s", price, rentalMode);
 
-            stringCatalogue += String.format("| %-9s | %-24s | %-27s | %20s |%n", code, name, category, priceStr);
+            stringCatalogue += String.format("| %-9s | %-24s | %-15s | %-20s |%n", code, name, category, priceStr);
         }
 
         return stringCatalogue;
