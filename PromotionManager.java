@@ -5,9 +5,9 @@ import java.time.LocalTime;
 class PromotionManager {
 
     public static void applyBestPromotion(TransactionRental transaction, Booking booking){
-        LocalTime bookingTime = (booking != null) ? booking.getStartTime() : LocalTime.now();
-        DayOfWeek bookingDay = (booking != null) ? booking.getBookingDate().getDayOfWeek() : LocalDate.now().getDayOfWeek();
-        int pax = (booking != null) ? booking.getNumParticipants() : 1;
+        LocalTime bookingTime = (booking != null) ? booking.getStartTime() : transaction.getArrivalTime();
+        DayOfWeek bookingDay = (booking != null) ? booking.getBookingDate().getDayOfWeek() : transaction.getArrivalDate().getDayOfWeek();
+        int pax = (booking != null) ? booking.getNumParticipants() : transaction.getParticipants();
 
         Promotion[] promotions = new Promotion[] {
             new PromotionA(bookingTime, bookingDay),
@@ -41,10 +41,10 @@ class PromotionManager {
 
     public static void displayPromotionInfo(TransactionRental transaction, Booking booking) {
 
-        LocalTime bookingTime = (booking != null) ? booking.getStartTime() : LocalTime.now();
-        LocalDate bookingDate = (booking != null) ? booking.getBookingDate() : LocalDate.now();
+        LocalTime bookingTime = (booking != null) ? booking.getStartTime() : transaction.getArrivalTime();
+        LocalDate bookingDate = (booking != null) ? booking.getBookingDate() : transaction.getArrivalDate();
         DayOfWeek bookingDay = bookingDate.getDayOfWeek();
-        int pax = (booking != null) ? booking.getNumParticipants() : 1;
+        int pax = (booking != null) ? booking.getNumParticipants() : transaction.getParticipants();
 
         Promotion[] promotions = new Promotion[] {
             new PromotionA(bookingTime, bookingDay),
@@ -57,8 +57,9 @@ class PromotionManager {
         System.out.println("====================================================");
         System.out.println("               PROMOTION EVALUATION                 ");
         System.out.println("====================================================");
-        System.out.printf("Booking Date  : %s (%s)%n", bookingDate, bookingDay);
-        System.out.printf("Booking Time  : %s%n", bookingTime);
+        String kind = (booking != null) ? "Booking" : "Arrival"; //walk-ins are judged on when they arrived
+        System.out.printf("%s Date  : %s (%s)%n", kind, bookingDate, bookingDay);
+        System.out.printf("%s Time  : %s%n", kind, bookingTime);
         System.out.printf("Participants  : %d%n", pax);
         System.out.printf("Gross Subtotal: RM %.2f%n", transaction.calcSubtotal());
         System.out.println("----------------------------------------------------");

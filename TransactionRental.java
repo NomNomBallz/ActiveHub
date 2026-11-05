@@ -1,10 +1,14 @@
 import java.util.*;
+import java.time.*;
 
 
 public class TransactionRental {
     private String transactionID, bookingID, customerName, paymentStatus, appliedPromotionName, contactNumber; 
     private ArrayList<TransactionItem> itemList;
     private double discountAmount;
+    private int participants;
+    private LocalDate arrivalDate;
+    private LocalTime arrivalTime;
 
     //overloading constructors, 1 for walk-in and 1 for booking
 
@@ -18,10 +22,13 @@ public class TransactionRental {
         this.appliedPromotionName = "None";
         this.paymentStatus = "PENDING";
         this.contactNumber = booking.getContactNo();
+        this.participants = booking.getNumParticipants();
+        this.arrivalDate = booking.getBookingDate();
+        this.arrivalTime = booking.getStartTime();
     }
 
     //constructor for walk-ins
-    public TransactionRental(String id, String name, String phoneNum){
+    public TransactionRental(String id, String name, String phoneNum, int participants){
         this.transactionID = id; 
         this.customerName = name;
         this.bookingID = null;
@@ -30,6 +37,9 @@ public class TransactionRental {
         this.appliedPromotionName = "None";
         this.paymentStatus = "PENDING";
         this.contactNumber = phoneNum;
+        this.participants = participants;
+        this.arrivalDate = LocalDate.now();
+        this.arrivalTime = LocalTime.now();
     }
 
     //basic getters and setters for attributes 
@@ -40,6 +50,9 @@ public class TransactionRental {
     public String getPromotionName(){return appliedPromotionName;}
     public double getDiscountAmount(){return discountAmount;}
     public String getContactNumber(){return contactNumber;}
+    public int getParticipants(){return participants;}
+    public LocalDate getArrivalDate(){return arrivalDate;}
+    public LocalTime getArrivalTime(){return arrivalTime;}
     public ArrayList<TransactionItem> getItems(){return itemList;}
 
     public void setTransactionID(String transactionID){this.transactionID = transactionID;}
@@ -49,6 +62,9 @@ public class TransactionRental {
     public void setPromotionName(String appliedPromotionName){this.appliedPromotionName = appliedPromotionName;}
     public void setDiscountAmount(double discountAmount){this.discountAmount = discountAmount;} 
     public void setContactNumber(String phoneNum){this.contactNumber = phoneNum;}
+    public void setParticipants(int participants){this.participants = participants;}
+    public void setArrivalDate(LocalDate arrivalDate){this.arrivalDate = arrivalDate;}
+    public void setArrivalTime(LocalTime arrivalTime){this.arrivalTime = arrivalTime;}
     
     //method to add items into the arraylist
     public void addItems(RentalItem itemCode, int qty){ 
@@ -137,10 +153,11 @@ public class TransactionRental {
         System.out.printf("Transaction ID : %-20s Payment Status : %s%n", transactionID, paymentStatus);
         System.out.printf("Customer Name  : %-20s Customer Type  : %s%n", customerName, (bookingID != null ? "Pre-Booked" : "Walk-In"));
         System.out.printf("Contact No.    : %-20s Booking ID     : %s%n", contactNumber, (bookingID != null ? bookingID : "N/A"));
+        System.out.printf("Participants   : %-20d Visit Date/Time: %s %s%n", participants, arrivalDate, arrivalTime);
         System.out.println("--------------------------------------------------------------------");
         System.out.printf("%-10s %-40s %-5s %-8s %-8s%n", "Code", "Description", "Qty", "Price", "Total");
         System.out.println("--------------------------------------------------------------------");
-
+ 
         if (itemList.isEmpty()) {
             System.out.println("                          [ CART IS EMPTY ]                         ");
         } else {
@@ -153,7 +170,7 @@ public class TransactionRental {
                         ti.calculateSubtotal());
             }
         }
-
+ 
         System.out.println("--------------------------------------------------------------------");
         System.out.printf("%-49s RM %8.2f%n", "Gross Subtotal:", calcSubtotal());
         if (discountAmount > 0) {
@@ -165,6 +182,8 @@ public class TransactionRental {
         System.out.printf("%-49s RM %8.2f%n", "FINAL PAYABLE AMOUNT:", calcFinalAmount());
         System.out.println("====================================================================\n");
     }
-
+ 
 }
+
+
 

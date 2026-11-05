@@ -7,13 +7,13 @@ public class main {
     static BookingManager bookingManager = new BookingManager();
     static TransactionManager transactionManager = new TransactionManager(bookingManager, rentalCatalogue);
 
-    public static void Main(String[] args) {
+    public static void main(String[] args) {
         
         boolean loop = true;
 
         do{
 
-            System.out.print("\n===== TASTEHUB SYSTEM =====\r\n" + //
+            System.out.print("\n===== ACTIVEHUB SYSTEM =====\r\n" + //
                     "1. Facility Booking Module\r\n" + //
                     "2. View Rental Catalogue\r\n" + //
                     "3. Create Rental Transaction\r\n" + //
@@ -58,7 +58,14 @@ public class main {
                 System.out.println("\n===== CREATE NEW BOOKING =====");
                 String name = InputValidator.readString(scanner, "Enter customer name");
                 String contact = InputValidator.readString(scanner, "Enter contact number");
-                String facility = InputValidator.readString(scanner, "Enter choice of facility (e.g F002)");
+                
+                //facility must be a real and valid code, otherwise later transaction is unable to find the proper facility
+                String facility = InputValidator.readString(scanner, "Enter choice of facility (e.g FC002)");
+                while (!rentalCatalogue.checkFacilityCode(facility)){
+                    System.out.println("Error: '" + facility + "' is not a valid facility code! Please check the catalogue.");
+                    facility = InputValidator.readString(scanner, "Enter facility code (e.g. FC001 or FC002)");
+                }
+
                 int participantqty = InputValidator.readInt(scanner, "Enter number of participants");
                 LocalDate date = InputValidator.readDate(scanner, "Enter booking date (YYYY-MM-DD)");
                 LocalTime start = InputValidator.readTime(scanner, "Enter start time (HH:mm)");
@@ -121,28 +128,60 @@ public class main {
             
             switch(rtChoice){
                 case 1 -> {
-                    System.out.println("\n===== RENTAL TRANSACTION MODULE =====");
+                    System.out.println("\n===== NEW TRANSACTION (BOOKING) =====");
 
                     String bookingID = InputValidator.readString(scanner, "Please enter the booking ID (Type 'CANCEL' to abort)");
 
-                    if (bookingID.equalsIgnoreCase("CANCEL")){
+                    if (bookingID.equalsIgnoreCase("CANCEL")){ //if user inputs CANCEL, abort the transaction
                         System.out.println("Transaction aborted!");
                         return;
                     }  
 
                     Booking linkedBooking = bookingManager.findBookingByID(bookingID);
-                    if (linkedBooking == null){
+                    if (linkedBooking == null){ //if a booking does not exist, abort the transaction
                         System.out.println("Error: Booking ID '" + bookingID + "'not found!");
                         return;
                     }
 
+                    if (linkedBooking.getStatus().equalsIgnoreCase("CANCELLED")){ //if a booking has already been cancelled, abort transaction
+                        System.out.println("Error: Booking " + linkedBooking.getBookingID() + " is a cancelled booking!");
+                        return;
+                    }
+
+                    //if a booking has already been converted into a transaction, return an error
+                    TransactionRental existing = transactionManager.findTransactionByID(linkedBooking.getBookingID());
+                    if (existing != null){
+                        System.out.println("Error: Booking " + linkedBooking.getBookingID() + " already has transaction " + existing.getTransactionID() + ".");
+                        System.out.println("Use 'Edit Existing Transaction' to add more items to it.");
+                        return;
+                    }
+
+                    //create the booking if pass all checks
                     TransactionRental transaction = transactionManager.createTransactionFromBooking(linkedBooking, rentalCatalogue);
 
                     System.out.println("Successfully linked to Booking: " + linkedBooking.getBookingID());
                     addItemsToCart(transaction);
                     printTransaction(transaction, linkedBooking, transactionManager);
                 }
-                case 2 -> {}
+                case 2 -> {
+                    System.out.println("\n===== NEW TRANSACTION (WALK-IN) =====");
+
+                    //enter customer name, can enter CANCEL to abort if this was an accidental prompt
+                    String name = InputValidator.readString(scanner, "Enter customer name (Type 'CANCEL' to abort)");
+                    if (name.equalsIgnoreCase("CANCEL")){
+                        System.out.println("Transaction aborted!");
+                        return;
+                    }
+
+                    String contact = InputValidator.readString(scanner, "Enter contact number");
+                    
+                    TransactionRental newTransaction = transactionManager.createTransactionFromWalkIn(name, contact);
+
+                    System.out.println("Successfully created walk-in transaction: " + newTransaction.getTransactionID());
+                    addItemsToCart(newTransaction);
+                    printTransaction(newTransaction, null, transactionManager);
+
+                }
                 case 3 -> {}
                 case 4 -> {
                     System.out.println("Exiting to main menu!");
@@ -182,6 +221,7 @@ public class main {
     //another helper method for rental transaction module
     private static void printTransaction(TransactionRental transaction, Booking booking, TransactionManager transactionManager){
         PromotionManager.applyBestPromotion(transaction, booking);
+        transactionManager.saveTransactions();
 
         System.out.println("\nTransaction saved successfully!");
 

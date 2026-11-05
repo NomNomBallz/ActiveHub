@@ -1,5 +1,6 @@
 import java.util.*;
 import java.io.*;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 
 public class TransactionManager {
@@ -22,7 +23,8 @@ public class TransactionManager {
         if (booking.getFacilityType() != null){
             RentalItem facilityItem = rentalCatalogue.findItemByCode(booking.getFacilityType());
             if (facilityItem != null){
-                int timeDiff =  (int) ChronoUnit.HOURS.between(booking.getStartTime(), booking.getEndTime());
+                long minutes = ChronoUnit.MINUTES.between(booking.getStartTime(), booking.getEndTime()); //get the time difference in minutes
+                int timeDiff = (int) Math.ceil(minutes / 60.0); //round up the minutes to the highest hour
                 transaction.addItems(facilityItem, timeDiff);
             }
         }
@@ -32,10 +34,10 @@ public class TransactionManager {
         return transaction;
     }
 
-    public TransactionRental createTransactionFromWalkIn(String name, String phoneNum){
+    public TransactionRental createTransactionFromWalkIn(String name, String phoneNum, int participants){
         String id = generateID();
 
-        TransactionRental transaction = new TransactionRental(id, name, phoneNum);
+        TransactionRental transaction = new TransactionRental(id, name, phoneNum, participants);
         addTransaction(transaction);
 
         return transaction;
@@ -87,12 +89,12 @@ public class TransactionManager {
 
     public void saveTransactions(){
         try (PrintWriter writer = new PrintWriter(new FileWriter("ActiveHub/transactions.txt"))){
-
-
+ 
+ 
             for (TransactionRental transaction : transactionList){
                 StringBuilder itemsStr = new StringBuilder();
                 ArrayList<TransactionItem> items = transaction.getItems();
-
+ 
                 for (int i = 0; i < items.size(); i++) {
                     TransactionItem ti = items.get(i);
                     itemsStr.append(ti.getItem().getCode()).append(":").append(ti.getQuantity());
@@ -100,12 +102,12 @@ public class TransactionManager {
                         itemsStr.append(";");
                     }
                 }
-
+ 
                 if (itemsStr.length() == 0) {
                     itemsStr.append("NONE");
                 }
-
-                writer.printf("%s|%s|%s|%s|%.2f|%s|%s|%s%n",
+ 
+                writer.printf("%s|%s|%s|%s|%.2f|%s|%s|%s|%d|%s|%s%n",
                         transaction.getTransactionID(),
                         transaction.getCustomerName(),
                         transaction.getContactNumber(),
@@ -113,9 +115,12 @@ public class TransactionManager {
                         transaction.getDiscountAmount(),
                         transaction.getPromotionName(),
                         transaction.getPaymentStatus(),
-                        itemsStr.toString());
+                        itemsStr.toString(),
+                        transaction.getParticipants(),
+                        transaction.getArrivalDate(),
+                        transaction.getArrivalTime());
             }
-
+ 
         } catch (IOException e){
             System.out.println("An error occurred while trying to save data to transactions.txt: " + e.getMessage());
         }
@@ -135,7 +140,7 @@ public class TransactionManager {
                 line = line.trim();
                 if (line.isEmpty()) continue;
 
-                // TXN_ID|CUSTOMER_NAME|CONTACT_NO|BOOKING_ID|DISCOUNT_AMOUNT|PROMO_NAME|PAYMENT_STATUS|ITEMS_DATA
+                // TXN_ID|CUSTOMER_NAME|CONTACT_NO|BOOKING_ID|DISCOUNT_AMOUNT|PROMO_NAME|PAYMENT_STATUS|ITEMS_DATA|PARTICIPANTS|ARRIVAL_DATE|ARRIVAL_TIME
                 String[] parts = line.split("\\|"); 
                 if (parts.length >= 7) {
                     String id = parts[0];
@@ -145,24 +150,27 @@ public class TransactionManager {
                     double discount = Double.parseDouble(parts[4]);
                     String promoName = parts[5];
                     String status = parts[6];
-
+                    int participants = Integer.parseInt(parts[8]);
+                    
                     TransactionRental transaction;
-
+ 
                     if (bookingId != null && bookingManager != null){
                         Booking booking = bookingManager.findBookingByID(bookingId);
-
+ 
                         if (booking != null) {
                             transaction = new TransactionRental(id, booking);
                         } else {
-                            transaction = new TransactionRental(id, name, contact);
+                            transaction = new TransactionRental(id, name, contact, participants);
                         }
                     } else {
-                        transaction = new TransactionRental(id, name, contact);
+                        transaction = new TransactionRental(id, name, contact, participants);
                     }
 
                     transaction.setDiscountAmount(discount);
                     transaction.setPromotionName(promoName);
                     transaction.setPaymentStatus(status);
+                    transaction.setArrivalDate(LocalDate.parse(parts[9]));
+                    transaction.setArrivalTime(LocalTime.parse(parts[10]));
 
                     if (parts.length >= 8 && !parts[7].equalsIgnoreCase("NONE") && rentalCatalogue != null) {
                         String[] itemTokens = parts[7].split(";");

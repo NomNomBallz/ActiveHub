@@ -44,6 +44,13 @@ public class RentalCatalogue {
 
     }
 
+    //
+    public boolean checkFacilityCode(String code){
+        RentalItem item = findItemByCode(code);
+        return item != null && item.getCategory().equalsIgnoreCase("FACILITY");
+
+    }
+
     //find a specific Item in the arraylist and returns it by code
     public RentalItem findItemByCode(String code){
         if (code == null) return null;
