@@ -34,7 +34,7 @@ class PromotionA extends Promotion {
         boolean isWeekday = bookingDay != DayOfWeek.SATURDAY && bookingDay != DayOfWeek.SUNDAY;
         boolean isOffPeakHour = !bookingTime.isBefore(LocalTime.of(9,0)) && bookingTime.isBefore(LocalTime.of(16,0));
 
-        if (isWeekday && isOffPeakHour) {
+        if (isWeekday && isOffPeakHour && transaction.getFacilityTotal() > 0) {
             calculateDeduction(transaction);
             return true;
 

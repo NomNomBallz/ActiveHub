@@ -39,7 +39,7 @@ public class TransactionRental {
         this.contactNumber = phoneNum;
         this.participants = participants;
         this.arrivalDate = LocalDate.now();
-        this.arrivalTime = LocalTime.now();
+        this.arrivalTime = LocalTime.now().withSecond(0).withNano(0); //keeps the hours and minutes only 
     }
 
     //basic getters and setters for attributes 
@@ -96,6 +96,40 @@ public class TransactionRental {
         }
 
         return false; //return false if item not removed/not found
+    }
+
+    //find an item that is already in this transaction by its code, null if it is not there
+    public TransactionItem findItem(String itemCode){
+        if (itemCode == null) return null;
+        for (TransactionItem ti : itemList){
+            if (ti.getItem().getCode().equalsIgnoreCase(itemCode.trim())){
+                return ti;
+            }
+        }
+        return null;
+    }
+
+    public boolean updateItemQuantity(String itemCode, int qty){
+        TransactionItem target = findItem(itemCode);
+        if (target == null || qty <= 0){
+            return false;
+        }
+        target.setQuantity(qty);
+        return true;
+    }
+
+    //walk-ins can correct their group size, a booking-based transaction takes it from the booking so it cannot be changed here
+    public boolean updateParticipants(int participants){
+        if (bookingID != null || participants <= 0){
+            return false;
+        }
+        this.participants = participants;
+        return true;
+    }
+
+    //a paid transaction is final and should no longer be edited
+    public boolean isPaid(){
+        return "PAID".equalsIgnoreCase(paymentStatus);
     }
 
     public double getEquipmentTotal(){

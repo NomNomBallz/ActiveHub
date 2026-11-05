@@ -6,10 +6,12 @@ import java.time.temporal.ChronoUnit;
 public class TransactionManager {
     ArrayList<TransactionRental> transactionList;
     private int nextID;
+    private BookingManager bookingManager; //kept so we can look up the booking a transaction came from
 
     public TransactionManager(BookingManager bookingManager, RentalCatalogue rentalCatalogue){
         this.transactionList = new ArrayList<TransactionRental>();
         this.nextID = 1; //default value for ID
+        this.bookingManager = bookingManager;
         loadTransactions(bookingManager, rentalCatalogue);
     }
 
@@ -87,6 +89,43 @@ public class TransactionManager {
         return results;
     }
 
+    //if a transaction was converted from a booking
+    //this method takes that transaction and returns the booking it was converted from 
+    public Booking getLinkedBooking(TransactionRental transaction){
+        if (transaction == null || transaction.getBookingID() == null || bookingManager == null) return null;
+        return bookingManager.findBookingByID(transaction.getBookingID());
+    }
+
+    //re-check all promotions against the transaction's current items, apply the best one, then save everything to the file
+    public void recalculateAndSave(TransactionRental transaction){
+        if (transaction == null) return;
+        PromotionManager.applyBestPromotion(transaction, getLinkedBooking(transaction));
+        saveTransactions();
+    }
+
+    //print a summary table of every transaction so staff can find the ID they need
+    public void displayAllTransactions(){
+        if (transactionList.isEmpty()){
+            System.out.println("No transactions recorded yet.");
+            return;
+        }
+ 
+        System.out.println("\n----------------------------------------------------------------------");
+        System.out.printf("%-8s %-20s %-10s %-9s %6s %14s%n", "ID", "Customer", "Type", "Status", "Items", "Payable (RM)");
+        System.out.println("----------------------------------------------------------------------");
+        for (TransactionRental t : transactionList){
+            System.out.printf("%-8s %-20s %-10s %-9s %6d %14.2f%n",
+                    t.getTransactionID(),
+                    t.getCustomerName(),
+                    (t.getBookingID() != null ? "Booking" : "Walk-In"),
+                    t.getPaymentStatus(),
+                    t.getItems().size(),
+                    t.calcFinalAmount());
+        }
+        System.out.println("----------------------------------------------------------------------\n");
+    }
+
+    //write transactions in memory to transactions.txt
     public void saveTransactions(){
         try (PrintWriter writer = new PrintWriter(new FileWriter("ActiveHub/transactions.txt"))){
  

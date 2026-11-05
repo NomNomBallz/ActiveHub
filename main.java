@@ -26,9 +26,10 @@ public class main {
 
             switch (option) {
                 case 1 -> bookingModule();
+                        //2. rental catalogue
                 case 2 -> System.out.print(rentalCatalogue);
                 case 3 -> createTransaction();
-                case 4 -> {}
+                case 4 -> applyPromotion();
                 case 5 -> System.out.println("chose 5.");
                 case 6 -> System.out.println("chose 6.");
                 case 7 -> {
@@ -148,7 +149,7 @@ public class main {
                         return;
                     }
 
-                    //if a booking has already been converted into a transaction, return an error
+                    //if the booking has already been converted into a transaction, return an error
                     TransactionRental existing = transactionManager.findTransactionByID(linkedBooking.getBookingID());
                     if (existing != null){
                         System.out.println("Error: Booking " + linkedBooking.getBookingID() + " already has transaction " + existing.getTransactionID() + ".");
@@ -161,7 +162,7 @@ public class main {
 
                     System.out.println("Successfully linked to Booking: " + linkedBooking.getBookingID());
                     addItemsToCart(transaction);
-                    printTransaction(transaction, linkedBooking, transactionManager);
+                    finaliseTransaction(transaction);
                 }
                 case 2 -> {
                     System.out.println("\n===== NEW TRANSACTION (WALK-IN) =====");
@@ -174,15 +175,16 @@ public class main {
                     }
 
                     String contact = InputValidator.readString(scanner, "Enter contact number");
+                    int participants = InputValidator.readInt(scanner, "Enter number of participants");
                     
-                    TransactionRental newTransaction = transactionManager.createTransactionFromWalkIn(name, contact);
+                    TransactionRental newTransaction = transactionManager.createTransactionFromWalkIn(name, contact, participants);
 
                     System.out.println("Successfully created walk-in transaction: " + newTransaction.getTransactionID());
                     addItemsToCart(newTransaction);
-                    printTransaction(newTransaction, null, transactionManager);
+                    finaliseTransaction(newTransaction);
 
                 }
-                case 3 -> {}
+                case 3 -> editTransaction();
                 case 4 -> {
                     System.out.println("Exiting to main menu!");
                     rtLoop = false;
@@ -195,7 +197,7 @@ public class main {
         }
     }
 
-    //some helper methods for 3. rental transaction module
+    //a helper method for rental transaction module (belongs to 3.)
     private static void addItemsToCart(TransactionRental transaction){
         boolean addingItem = true;
         while(addingItem){
@@ -218,18 +220,151 @@ public class main {
         }
     }  
 
-    //another helper method for rental transaction module
-    private static void printTransaction(TransactionRental transaction, Booking booking, TransactionManager transactionManager){
-        PromotionManager.applyBestPromotion(transaction, booking);
-        transactionManager.saveTransactions();
+    //another helper method for rental transaction module (belongs to 3.)
+    //applies the best promotion, saves, shows promotion breakdown then the bill.
+    private static void finaliseTransaction(TransactionRental transaction){
+        transactionManager.recalculateAndSave(transaction);
 
-        System.out.println("\nTransaction saved successfully!");
-
+        PromotionManager.displayPromotionInfo(transaction, transactionManager.getLinkedBooking(transaction));
         transaction.printReceipt();
+
+        System.out.println("Transaction " + transaction.getTransactionID() + " saved successfully!");
     }
 
+    //edit an existing transaction (belongs to 3.)
+    private static void editTransaction(){
+        System.out.println("\n===== EDIT EXISTING TRANSACTION =====");
 
+        //initial prompt, user can choose to CANCEL or LIST all transactions before proceeding
+        TransactionRental transaction = null;
+        while (transaction == null){
+           String id = InputValidator.readString(scanner, "Enter transaction ID (e.g. TRN001) - type 'LIST' to view all, 'CANCEL' to abort");
+ 
+            if (id.equalsIgnoreCase("CANCEL")){
+                System.out.println("Edit aborted!");
+                return;
+            }
+            if (id.equalsIgnoreCase("LIST")){
+                transactionManager.displayAllTransactions();
+                continue;
+            }
+ 
+            transaction = transactionManager.findTransactionByID(id);
+            if (transaction == null){
+                System.out.println("Error: Transaction ID '" + id + "' not found!");
+            }
+        }
 
-    
+        //if the transaction has already been paid, kenot edit anymore
+        if (transaction.isPaid()){
+            System.out.println("Error: Transaction " + transaction.getTransactionID() + " has already been PAID and can't be edited anymore!");
+            return;
+        }
+
+        //edit the transaction
+        boolean editing = true;
+        while (editing){
+            transaction.printReceipt();
+            System.out.println("1. Add more items (adds on top of existing quantity)");
+            System.out.println("2. Change an item's quantity");
+            System.out.println("3. Remove an item");
+            System.out.println("4. Change number of participants (walk-in only)");
+            System.out.println("5. Finish editing");
+
+            int editChoice = InputValidator.readInt(scanner, "Select an option (1-5)");
+
+            //after every change the promotions are checked again and the file is updated
+            switch (editChoice){
+                case 1 -> {
+                    addItemsToCart(transaction);
+                    transactionManager.recalculateAndSave(transaction);
+                }
+
+                case 2 -> {
+                    String code = InputValidator.readString(scanner, "Enter the item code to change (type 'CANCEL' to abort)");
+                    
+                    if (code.equalsIgnoreCase("CANCEL")){
+                        return;
+                    }
+            
+                    TransactionItem target = transaction.findItem(code);
+                    if (target == null){
+                        System.out.println("Error: '" + code + "' is not in this transaction!");
+                        return;
+                    }
+            
+                    String qtyPrompt = target.getItem().getCategory().equalsIgnoreCase("FACILITY") ? "Enter new duration in hours" : "Enter new quantity";
+                    int qty = InputValidator.readInt(scanner, qtyPrompt);
+            
+                    if (transaction.updateItemQuantity(code, qty)){
+                        System.out.println("Updated: " + target.getItem().getName() + " is now " + qty + ".");
+                    } else {
+                        System.out.println("Error: Quantity must be greater than 0! Use 'Remove an item' to delete it.");
+                    }
+                    transactionManager.recalculateAndSave(transaction);
+                }
+
+                case 3 -> {
+                    String code = InputValidator.readString(scanner, "Enter the item code to remove (type 'CANCEL' to abort)");
+                    
+                    if (code.equalsIgnoreCase("CANCEL")){
+                        return;
+                    }
+            
+                    if (transaction.removeItem(code)){
+                        System.out.println("Removed item " + code.toUpperCase() + " from the transaction.");
+                    } else {
+                        System.out.println("Error: '" + code + "' is not in this transaction!");
+                    }
+
+                    transactionManager.recalculateAndSave(transaction);
+                }
+                case 4 -> {
+                    //no point asking if it is a booking-based transaction, the number comes from the booking
+                    if (transaction.getBookingID() != null){
+                        System.out.println("Error: The number of participants comes from booking " + transaction.getBookingID() + " and cannot be changed here.");
+                        return;
+                    }
+            
+                    int participants = InputValidator.readInt(scanner, "Enter new number of participants (currently " + transaction.getParticipants() + ")");
+            
+                    if (transaction.updateParticipants(participants)){
+                        System.out.println("Updated: participants is now " + participants + ".");
+                    } else {
+                        System.out.println("Error: Unable to change the number of participants!");
+                    }
+                    transactionManager.recalculateAndSave(transaction);
+                }
+
+                case 5 -> editing = false;
+                default -> System.out.println("Invalid option! Please try again.");
+            }
+
+        }
+
+        finaliseTransaction(transaction);
+    }
+
+    private static void applyPromotion(){
+        System.out.println("\n===== PROMOTION CHECKER =====");
+        boolean promotionLoop = true;
+        while(promotionLoop){
+            String id = InputValidator.readString(scanner, "Enter the transaction ID for the transaction you want to check (type 'CANCEL' to abort)");
+            
+            if (id.equalsIgnoreCase("CANCEL")){
+                return;
+            }
+            
+            TransactionRental transaction = transactionManager.findTransactionByID(id);
+
+            if (transaction != null){
+                PromotionManager.displayPromotionInfo(transaction, transactionManager.getLinkedBooking(transaction));
+            } else {
+                System.out.println("\nInvalid transaction ID!");
+            }
+        }
+        
+
+    }
 
 }

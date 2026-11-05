@@ -54,7 +54,7 @@ class PromotionManager {
 
         Promotion best = chooseBest(promotions, transaction);
 
-        System.out.println("====================================================");
+        System.out.println("\n====================================================");
         System.out.println("               PROMOTION EVALUATION                 ");
         System.out.println("====================================================");
         String kind = (booking != null) ? "Booking" : "Arrival"; //walk-ins are judged on when they arrived
