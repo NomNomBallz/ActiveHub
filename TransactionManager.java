@@ -19,7 +19,7 @@ public class TransactionManager {
 
         String id = generateID();
         TransactionRental transaction = new TransactionRental(id, booking);
-        if (booking.getFacilityType() != null && rentalCatalogue != null){
+        if (booking.getFacilityType() != null){
             RentalItem facilityItem = rentalCatalogue.findItemByCode(booking.getFacilityType());
             if (facilityItem != null){
                 int timeDiff =  (int) ChronoUnit.HOURS.between(booking.getStartTime(), booking.getEndTime());

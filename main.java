@@ -7,7 +7,7 @@ public class main {
     static BookingManager bookingManager = new BookingManager();
     static TransactionManager transactionManager = new TransactionManager(bookingManager, rentalCatalogue);
 
-    public static void main(String[] args) {
+    public static void Main(String[] args) {
         
         boolean loop = true;
 
