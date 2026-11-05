@@ -9,6 +9,8 @@ public class TransactionRental {
     private int participants;
     private LocalDate arrivalDate;
     private LocalTime arrivalTime;
+    private String paymentMethod;
+    private LocalDateTime paymentDateTime; 
 
     //overloading constructors, 1 for walk-in and 1 for booking
 
@@ -21,6 +23,8 @@ public class TransactionRental {
         this.discountAmount = 0.0; 
         this.appliedPromotionName = "None";
         this.paymentStatus = "PENDING";
+        this.paymentMethod = "NONE";
+        this.paymentDateTime = null;
         this.contactNumber = booking.getContactNo();
         this.participants = booking.getNumParticipants();
         this.arrivalDate = booking.getBookingDate();
@@ -36,6 +40,8 @@ public class TransactionRental {
         this.discountAmount = 0.0; 
         this.appliedPromotionName = "None";
         this.paymentStatus = "PENDING";
+        this.paymentMethod = "NONE";
+        this.paymentDateTime = null;
         this.contactNumber = phoneNum;
         this.participants = participants;
         this.arrivalDate = LocalDate.now();
@@ -53,7 +59,10 @@ public class TransactionRental {
     public int getParticipants(){return participants;}
     public LocalDate getArrivalDate(){return arrivalDate;}
     public LocalTime getArrivalTime(){return arrivalTime;}
+    public String getPaymentMethod(){return paymentMethod;}
+    public LocalDateTime getPaymentDateTime(){return paymentDateTime;}
     public ArrayList<TransactionItem> getItems(){return itemList;}
+    
 
     public void setTransactionID(String transactionID){this.transactionID = transactionID;}
     public void setBookingID(String bookingID){this.bookingID = bookingID;}
@@ -65,6 +74,8 @@ public class TransactionRental {
     public void setParticipants(int participants){this.participants = participants;}
     public void setArrivalDate(LocalDate arrivalDate){this.arrivalDate = arrivalDate;}
     public void setArrivalTime(LocalTime arrivalTime){this.arrivalTime = arrivalTime;}
+    public void setPaymentMethod(String paymentMethod){this.paymentMethod = paymentMethod;}
+    public void setPaymentDateTime(LocalDateTime paymentDateTime){this.paymentDateTime = paymentDateTime;}
     
     //method to add items into the arraylist
     public void addItems(RentalItem itemCode, int qty){ 
@@ -127,9 +138,26 @@ public class TransactionRental {
         return true;
     }
 
+    //check to see if a transaction has already been paid or not
     //a paid transaction is final and should no longer be edited
     public boolean isPaid(){
         return "PAID".equalsIgnoreCase(paymentStatus);
+    }
+
+    //check to see if a transaction is eligible to be paid
+    public boolean canBePaid(){
+        return !isPaid() && !itemList.isEmpty();
+    }
+
+    //record a full payment, returns false if the transaction cannot be paid (already paid or empty cart)
+    public boolean markAsPaid(String method, LocalDateTime paidAt){
+        if (!canBePaid() || method == null || paidAt == null){
+            return false;
+        }
+        this.paymentMethod = method.toUpperCase();
+        this.paymentDateTime = paidAt.withSecond(0).withNano(0); //hours and minutes only, same as the arrival time
+        this.paymentStatus = "PAID";
+        return true;
     }
 
     public double getEquipmentTotal(){
@@ -188,6 +216,10 @@ public class TransactionRental {
         System.out.printf("Customer Name  : %-20s Customer Type  : %s%n", customerName, (bookingID != null ? "Pre-Booked" : "Walk-In"));
         System.out.printf("Contact No.    : %-20s Booking ID     : %s%n", contactNumber, (bookingID != null ? bookingID : "N/A"));
         System.out.printf("Participants   : %-20d Visit Date/Time: %s %s%n", participants, arrivalDate, arrivalTime);
+        if (isPaid()){
+            String paidAt = (paymentDateTime != null) ? paymentDateTime.toLocalDate() + " " + paymentDateTime.toLocalTime() : "N/A";
+            System.out.printf("Payment Method : %-20s Paid On        : %s%n", paymentMethod, paidAt);
+        }
         System.out.println("--------------------------------------------------------------------");
         System.out.printf("%-10s %-40s %-5s %-8s %-8s%n", "Code", "Description", "Qty", "Price", "Total");
         System.out.println("--------------------------------------------------------------------");
