@@ -125,6 +125,54 @@ public class TransactionManager {
         System.out.println("----------------------------------------------------------------------\n");
     }
 
+    //get every transaction that is still waiting for payment (not paid yet and has at least one item)
+    public ArrayList<TransactionRental> getPayableTransactions(){
+        ArrayList<TransactionRental> results = new ArrayList<TransactionRental>();
+        for (TransactionRental transaction : transactionList){
+            if (transaction.canBePaid()){
+                results.add(transaction);
+            }
+        }
+        return results;
+    }
+
+    //print a summary table of transactions that are pending payment, then return how many there are
+    public int displayPayableTransaction(){
+        ArrayList<TransactionRental> payable = getPayableTransactions();
+
+        if (payable.isEmpty()){
+            System.out.println("No transactions are waiting for payment.");
+            return 0;
+        }
+ 
+        System.out.println("\n----------------------------------------------------------------------");
+        System.out.printf("%-8s %-20s %-10s %-9s %6s %14s%n", "ID", "Customer", "Type", "Status", "Items", "Payable (RM)");
+        System.out.println("----------------------------------------------------------------------");
+        for (TransactionRental t : payable){
+            System.out.printf("%-8s %-20s %-10s %-9s %6d %14.2f%n",
+                    t.getTransactionID(),
+                    t.getCustomerName(),
+                    (t.getBookingID() != null ? "Booking" : "Walk-In"),
+                    t.getPaymentStatus(),
+                    t.getItems().size(),
+                    t.calcFinalAmount());
+        }
+        System.out.println("----------------------------------------------------------------------\n");
+ 
+        return payable.size();
+    }
+
+    //record a full payment on a transaction and save it to the file, returns false if the transaction cannot be paid
+    public boolean completePayment(TransactionRental transaction, String method){
+        if (transaction == null) return false;
+ 
+        boolean paid = transaction.markAsPaid(method, LocalDateTime.now());
+        if (paid){
+            saveTransactions();
+        }
+        return paid;
+    }
+
     //write transactions in memory to transactions.txt
     public void saveTransactions(){
         try (PrintWriter writer = new PrintWriter(new FileWriter("ActiveHub/transactions.txt"))){
@@ -146,7 +194,7 @@ public class TransactionManager {
                     itemsStr.append("NONE");
                 }
  
-                writer.printf("%s|%s|%s|%s|%.2f|%s|%s|%s|%d|%s|%s%n",
+                writer.printf("%s|%s|%s|%s|%.2f|%s|%s|%s|%d|%s|%s|%s|%s%n",
                         transaction.getTransactionID(),
                         transaction.getCustomerName(),
                         transaction.getContactNumber(),
@@ -157,7 +205,9 @@ public class TransactionManager {
                         itemsStr.toString(),
                         transaction.getParticipants(),
                         transaction.getArrivalDate(),
-                        transaction.getArrivalTime());
+                        transaction.getArrivalTime(),
+                        transaction.getPaymentMethod(),
+                        (transaction.getPaymentDateTime() != null ? transaction.getPaymentDateTime() : "NONE"));
             }
  
         } catch (IOException e){
@@ -168,18 +218,18 @@ public class TransactionManager {
     public void loadTransactions(BookingManager bookingManager, RentalCatalogue rentalCatalogue){
         File file = new File("ActiveHub/transactions.txt");
         if (!file.exists()) return;
-
+ 
         transactionList.clear();
         int maxID = 0;
-
+ 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))){
             String line;
-
+ 
             while ((line = reader.readLine()) != null){
                 line = line.trim();
                 if (line.isEmpty()) continue;
-
-                // TXN_ID|CUSTOMER_NAME|CONTACT_NO|BOOKING_ID|DISCOUNT_AMOUNT|PROMO_NAME|PAYMENT_STATUS|ITEMS_DATA|PARTICIPANTS|ARRIVAL_DATE|ARRIVAL_TIME
+ 
+                // TXN_ID|CUSTOMER_NAME|CONTACT_NO|BOOKING_ID|DISCOUNT_AMOUNT|PROMO_NAME|PAYMENT_STATUS|ITEMS_DATA|PARTICIPANTS|ARRIVAL_DATE|ARRIVAL_TIME|PAYMENT_METHOD|PAYMENT_DATETIME
                 String[] parts = line.split("\\|"); 
                 if (parts.length >= 7) {
                     String id = parts[0];
@@ -189,7 +239,15 @@ public class TransactionManager {
                     double discount = Double.parseDouble(parts[4]);
                     String promoName = parts[5];
                     String status = parts[6];
-                    int participants = Integer.parseInt(parts[8]);
+                    //the columns after ITEMS_DATA were added later, so older lines without them still load with defaults
+                    int participants = 1;
+                    if (parts.length > 8){
+                        try {
+                            participants = Integer.parseInt(parts[8]);
+                        } catch (NumberFormatException e){
+                            participants = 1;
+                        }
+                    }
                     
                     TransactionRental transaction;
  
@@ -204,13 +262,31 @@ public class TransactionManager {
                     } else {
                         transaction = new TransactionRental(id, name, contact, participants);
                     }
-
+ 
                     transaction.setDiscountAmount(discount);
                     transaction.setPromotionName(promoName);
                     transaction.setPaymentStatus(status);
-                    transaction.setArrivalDate(LocalDate.parse(parts[9]));
-                    transaction.setArrivalTime(LocalTime.parse(parts[10]));
-
+ 
+                    if (parts.length >= 11){
+                        try {
+                            transaction.setArrivalDate(LocalDate.parse(parts[9]));
+                            transaction.setArrivalTime(LocalTime.parse(parts[10]));
+                        } catch (java.time.format.DateTimeParseException e){
+                            //damaged values, keep the defaults from the constructor
+                        }
+                    }
+ 
+                    if (parts.length >= 13){
+                        transaction.setPaymentMethod(parts[11]);
+                        if (!parts[12].equalsIgnoreCase("NONE")){
+                            try {
+                                transaction.setPaymentDateTime(LocalDateTime.parse(parts[12]));
+                            } catch (java.time.format.DateTimeParseException e){
+                                //damaged value, the payment time stays empty
+                            }
+                        }
+                    }
+ 
                     if (parts.length >= 8 && !parts[7].equalsIgnoreCase("NONE") && rentalCatalogue != null) {
                         String[] itemTokens = parts[7].split(";");
                         for (String token : itemTokens) {
@@ -225,9 +301,9 @@ public class TransactionManager {
                             }
                         }
                     }
-
+ 
                     transactionList.add(transaction);
-
+ 
                     if (id.toUpperCase().startsWith("TRN")){
                         try {
                             int num = Integer.parseInt(id.substring(3));
@@ -237,12 +313,12 @@ public class TransactionManager {
                         } catch (NumberFormatException ignored) {}
                     }
                 }
-
+ 
                 
             }
-
+ 
             this.nextID = maxID + 1;
-
+ 
         } catch (IOException e){
             System.out.println("Error loading transactions from file: " + e.getMessage());
         }

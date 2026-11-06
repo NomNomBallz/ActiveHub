@@ -243,7 +243,7 @@ public class TransactionRental {
             System.out.printf("%-49s-RM %8.2f%n", "Discount (" + appliedPromotionName + "):", discountAmount);
             System.out.printf("%-49s RM %8.2f%n", "Net Subtotal:", calcNetSubtotal());
         }
-        System.out.printf("%-49s RM %8.2f%n", "Service Charge (10%%):", calcServiceCharge());
+        System.out.printf("%-49s RM %8.2f%n", "Service Charge (10%):", calcServiceCharge());
         System.out.println("--------------------------------------------------------------------");
         System.out.printf("%-49s RM %8.2f%n", "FINAL PAYABLE AMOUNT:", calcFinalAmount());
         System.out.println("====================================================================\n");
