@@ -156,7 +156,7 @@ public class main {
                     }
 
                     //if the booking has already been converted into a transaction, return an error
-                    TransactionRental existing = transactionManager.findTransactionByID(linkedBooking.getBookingID());
+                    TransactionRental existing = transactionManager.findTransactionByBookingID(linkedBooking.getBookingID());
                     if (existing != null){
                         System.out.println("Error: Booking " + linkedBooking.getBookingID() + " already has transaction " + existing.getTransactionID() + ".");
                         System.out.println("Use 'Edit Existing Transaction' to add more items to it.");
