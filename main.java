@@ -150,8 +150,7 @@ public class main {
 
                     if (linkedBooking.getStatus().equalsIgnoreCase("CANCELLED")) { // if a booking has already been
                                                                                    // cancelled, abort transaction
-                        System.out
-                                .println("Error: Booking " + linkedBooking.getBookingID() + " is a cancelled booking!");
+                        System.out.println("Error: Booking " + linkedBooking.getBookingID() + " is a cancelled booking!");
                         return;
                     }
 

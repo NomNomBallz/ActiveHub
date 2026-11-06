@@ -12,6 +12,7 @@ public class TransactionItem {
 
     //getters and setters
     public RentalItem getItem(){return item;}
+    public void setItem(RentalItem item){this.item = item;}
     public int getQuantity(){return quantity;}
     public void setQuantity(int qty){quantity = qty;}
 
