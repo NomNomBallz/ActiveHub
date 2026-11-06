@@ -14,8 +14,11 @@ public class Report {
     private int NoOfBooking;
     private int NoOfTransaction;
     private double TotalRevenue;
-    private RentalItem MostFrequent;
-    private int MostFrequentQty;
+    private RentalItem MostFrequentFacility;
+    private int MostFrequentFacilityQty;
+
+    private RentalItem MostFrequentEquipment;
+    private int MostFrequentEquipmentQty;
     private String PaymentMethodSummary;
     private ArrayList<TransactionRental> paidTransactionList;
 
@@ -29,26 +32,26 @@ public class Report {
         // Number of paid transactions
         this.NoOfTransaction = paidTransactionList.size();
         this.TotalRevenue = CalculateDailyRevenue();
-        this.MostFrequent = getMostFrequentRentalItem();
+        this.MostFrequentEquipment = getMostFrequentEquipment();
+        this.MostFrequentFacility = getMostFrequentFacility();
         this.PaymentMethodSummary = getPaymentMethodSummary();
 
     }
 
     // Setter
     public void setMostFrequentQty(int mostFrequentQty) {
-        MostFrequentQty = mostFrequentQty;
+        MostFrequentEquipmentQty = mostFrequentQty;
     }
 
     public double CalculateDailyRevenue() {
-        // Get current's datetime
-        LocalDateTime current = LocalDateTime.now();
-        double Total = 0;
 
-        // TEMPORARY:
-        // Still missing logic where we get all transactions that are PAID TODAY
-        // For now this is just add transcations that is recorded today.
+        double total = 0;
 
-        return Total;
+        for (TransactionRental t : paidTransactionList) {
+            total += t.calcFinalAmount();
+        }
+
+        return total;
     }
 
     public ArrayList<TransactionRental> getPaidTransactionList() {
@@ -76,41 +79,79 @@ public class Report {
 
     }
 
-    public RentalItem getMostFrequentRentalItem() {
-        ArrayList<TransactionRental> transactionList = paidTransactionList;
-        if (transactionList.isEmpty()) {
-            return null;
-        }
+    public RentalItem getMostFrequentFacility() {
 
         HashMap<String, Integer> totals = new HashMap<>();
         HashMap<String, RentalItem> itemByName = new HashMap<>();
 
-        // Step 1: total quantity per item name
-        for (TransactionRental t : transactionList) {
+        for (TransactionRental t : paidTransactionList) {
 
-            ArrayList<TransactionItem> items = t.getItems();
-            for (TransactionItem item : items) {
-                int quantity = item.getQuantity();
+            for (TransactionItem item : t.getItems()) {
+
                 RentalItem rentalItem = item.getItem();
-                String name = rentalItem.getName();
 
-                totals.merge(name, quantity, Integer::sum);
-                itemByName.putIfAbsent(name, rentalItem);
+                if (rentalItem.getCategory().equalsIgnoreCase("Facility")) {
+
+                    String name = rentalItem.getName();
+                    int quantity = item.getQuantity();
+
+                    totals.merge(name, quantity, Integer::sum);
+                    itemByName.putIfAbsent(name, rentalItem);
+                }
             }
-
         }
 
-        // Step 2: find the name with the highest total
         String topName = null;
         int maxQuantity = 0;
+
         for (Map.Entry<String, Integer> entry : totals.entrySet()) {
+
             if (entry.getValue() > maxQuantity) {
                 maxQuantity = entry.getValue();
                 topName = entry.getKey();
             }
         }
 
-        setMostFrequentQty(maxQuantity);
+        MostFrequentFacilityQty = maxQuantity;
+
+        return itemByName.get(topName);
+    }
+
+    public RentalItem getMostFrequentEquipment() {
+
+        HashMap<String, Integer> totals = new HashMap<>();
+        HashMap<String, RentalItem> itemByName = new HashMap<>();
+
+        for (TransactionRental t : paidTransactionList) {
+
+            for (TransactionItem item : t.getItems()) {
+
+                RentalItem rentalItem = item.getItem();
+
+                if (rentalItem.getCategory().equalsIgnoreCase("Equipment")) {
+
+                    String name = rentalItem.getName();
+                    int quantity = item.getQuantity();
+
+                    totals.merge(name, quantity, Integer::sum);
+                    itemByName.putIfAbsent(name, rentalItem);
+                }
+            }
+        }
+
+        String topName = null;
+        int maxQuantity = 0;
+
+        for (Map.Entry<String, Integer> entry : totals.entrySet()) {
+
+            if (entry.getValue() > maxQuantity) {
+                maxQuantity = entry.getValue();
+                topName = entry.getKey();
+            }
+        }
+
+        MostFrequentEquipmentQty = maxQuantity;
+
         return itemByName.get(topName);
     }
 
@@ -161,8 +202,14 @@ public class Report {
                         "Total Daily Revenue           : RM %.2f\n\n" +
 
                         "MOST FREQUENTLY RENTED\n" +
-                        "Item / Facility               : %s\n" +
-                        "Total Quantity Rented         : %d\n\n" +
+
+                        "FACILITY\n" +
+                        "Most Rented Facility          : %s\n" +
+                        "Total Hours Rented            : %d hours\n\n" +
+
+                        "EQUIPMENT\n" +
+                        "Most Rented Equipment         : %s\n" +
+                        "Total Units Rented             : %d units\n\n" +
 
                         "PAYMENT METHOD SUMMARY\n%s" +
 
@@ -171,8 +218,10 @@ public class Report {
                 NoOfBooking,
                 NoOfTransaction,
                 TotalRevenue,
-                MostFrequent,
-                MostFrequentQty,
+                MostFrequentFacility,
+                MostFrequentFacilityQty,
+                MostFrequentEquipment,
+                MostFrequentEquipmentQty,
                 PaymentMethodSummary);
     }
 
