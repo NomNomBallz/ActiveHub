@@ -18,7 +18,7 @@ public class Booking {
         setStartTime(start); // HH:mm, 14:00, 18:30
         setFacilityType(facility); // FC001, FC002
         setNumParticipants(participantqty); // 2, 4, 6
-        setStatus(status); // BOOKED, CANCELLED
+        setStatus(status); // RESERVED, CANCELLED
     }
 
     // getters
