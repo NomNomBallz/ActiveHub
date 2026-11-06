@@ -3,7 +3,7 @@ import java.util.*;
 import java.io.*;
 
 public class BookingManager {
-    private ArrayList<Booking> bookings;
+    public ArrayList<Booking> bookings;
 
     public BookingManager(){
         bookings = new ArrayList<>();
@@ -131,7 +131,7 @@ public class BookingManager {
 
     //saves the data in current memory to the txt file
     private void saveBookings(){
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter("ActiveHub/bookings.txt"))){
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("bookings.txt"))){
             //for every object (bookingEntry) in the arraylist (bookings), get all of the data and put in bookings.txt 
             for (Booking bookingEntry : bookings){
                 writer.write(bookingEntry.convertToFileString());
@@ -145,7 +145,7 @@ public class BookingManager {
 
     //gets the data from the txt file and loads it into current memory
     private void loadBookings(){
-        File file = new File("ActiveHub/bookings.txt");
+        File file = new File("bookings.txt");
 
         //initialise the classes that read lines
         try(BufferedReader reader = new BufferedReader(new FileReader(file))){

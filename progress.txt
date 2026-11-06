@@ -104,10 +104,24 @@ Discount Amount: RM50.00
 Subtotal after Discount: RM220.00
 Service Charge (10%): RM22.00
 
-Final Payable Amount: RM242.00
+Final Payable Amount: RM242.00 
 
 
 
+Reporting Module
+At the end of the business day, the manager would like to view a summary report.
+The system should display the total number of facility bookings, total completed
+rental transactions, total daily revenue, the most frequently rented item or facility,
+and a summary of payment methods used
+
+Plans: 
+Make attributes:
+
+NoOfBooking = 
+NoOfTransaction = 
+TotalRevenue = 
+MostFrequent = 
+Py
 
 
 

@@ -6,27 +6,30 @@ import java.time.temporal.ChronoUnit;
 public class TransactionManager {
     ArrayList<TransactionRental> transactionList;
     private int nextID;
-    private BookingManager bookingManager; //kept so we can look up the booking a transaction came from
+    private BookingManager bookingManager; // kept so we can look up the booking a transaction came from
 
-    public TransactionManager(BookingManager bookingManager, RentalCatalogue rentalCatalogue){
+    public TransactionManager(BookingManager bookingManager, RentalCatalogue rentalCatalogue) {
         this.transactionList = new ArrayList<TransactionRental>();
-        this.nextID = 1; //default value for ID
+        this.nextID = 1; // default value for ID
         this.bookingManager = bookingManager;
         loadTransactions(bookingManager, rentalCatalogue);
+
     }
 
-
-    //use constructor to create a TransactionRental object using booking class
-    public TransactionRental createTransactionFromBooking(Booking booking, RentalCatalogue rentalCatalogue){
-        if (booking == null) return null;
+    // use constructor to create a TransactionRental object using booking class
+    public TransactionRental createTransactionFromBooking(Booking booking, RentalCatalogue rentalCatalogue) {
+        if (booking == null)
+            return null;
 
         String id = generateID();
         TransactionRental transaction = new TransactionRental(id, booking);
-        if (booking.getFacilityType() != null){
+        if (booking.getFacilityType() != null) {
             RentalItem facilityItem = rentalCatalogue.findItemByCode(booking.getFacilityType());
-            if (facilityItem != null){
-                long minutes = ChronoUnit.MINUTES.between(booking.getStartTime(), booking.getEndTime()); //get the time difference in minutes
-                int timeDiff = (int) Math.ceil(minutes / 60.0); //round up the minutes to the highest hour
+            if (facilityItem != null) {
+                long minutes = ChronoUnit.MINUTES.between(booking.getStartTime(), booking.getEndTime()); // get the time
+                                                                                                         // difference
+                                                                                                         // in minutes
+                int timeDiff = (int) Math.ceil(minutes / 60.0); // round up the minutes to the highest hour
                 transaction.addItems(facilityItem, timeDiff);
             }
         }
@@ -36,7 +39,7 @@ public class TransactionManager {
         return transaction;
     }
 
-    public TransactionRental createTransactionFromWalkIn(String name, String phoneNum, int participants){
+    public TransactionRental createTransactionFromWalkIn(String name, String phoneNum, int participants) {
         String id = generateID();
 
         TransactionRental transaction = new TransactionRental(id, name, phoneNum, participants);
@@ -45,28 +48,30 @@ public class TransactionManager {
         return transaction;
     }
 
-    //get transactions in memory
-    public ArrayList<TransactionRental> getAllTransactions(){
+    // get transactions in memory
+    public ArrayList<TransactionRental> getAllTransactions() {
         return transactionList;
     }
 
-    //generate incrementing ID
-    public String generateID(){
+    // generate incrementing ID
+    public String generateID() {
         return String.format("TRN%03d", nextID++);
     }
 
-    //add a transaction to the arraylist
-    public void addTransaction(TransactionRental trn){
-        if (trn == null) return;
+    // add a transaction to the arraylist
+    public void addTransaction(TransactionRental trn) {
+        if (trn == null)
+            return;
         transactionList.add(trn);
         saveTransactions();
     }
 
-    //find a transaction by its ID
-    public TransactionRental findTransactionByID(String id){
-        if (id == null) return null;
-        for (TransactionRental transaction : transactionList){
-            if (transaction.getTransactionID().equalsIgnoreCase(id.trim())){
+    // find a transaction by its ID
+    public TransactionRental findTransactionByID(String id) {
+        if (id == null)
+            return null;
+        for (TransactionRental transaction : transactionList) {
+            if (transaction.getTransactionID().equalsIgnoreCase(id.trim())) {
                 return transaction;
             }
         }
@@ -85,14 +90,16 @@ public class TransactionManager {
         return null;
     }
 
-    //find all transactions that a customer made and add them to a single array list
-    public ArrayList<TransactionRental> findTransactionsByCustName(String name){
+    // find all transactions that a customer made and add them to a single array
+    // list
+    public ArrayList<TransactionRental> findTransactionsByCustName(String name) {
         ArrayList<TransactionRental> results = new ArrayList<TransactionRental>();
 
-        if (name == null) return results;
+        if (name == null)
+            return results;
 
-        for (TransactionRental transaction : transactionList){
-            if (transaction.getCustomerName().equalsIgnoreCase(name.trim())){
+        for (TransactionRental transaction : transactionList) {
+            if (transaction.getCustomerName().equalsIgnoreCase(name.trim())) {
                 results.add(transaction);
             }
         }
@@ -100,31 +107,36 @@ public class TransactionManager {
         return results;
     }
 
-    //if a transaction was converted from a booking
-    //this method takes that transaction and returns the booking it was converted from 
-    public Booking getLinkedBooking(TransactionRental transaction){
-        if (transaction == null || transaction.getBookingID() == null || bookingManager == null) return null;
+    // if a transaction was converted from a booking
+    // this method takes that transaction and returns the booking it was converted
+    // from
+    public Booking getLinkedBooking(TransactionRental transaction) {
+        if (transaction == null || transaction.getBookingID() == null || bookingManager == null)
+            return null;
         return bookingManager.findBookingByID(transaction.getBookingID());
     }
 
-    //re-check all promotions against the transaction's current items, apply the best one, then save everything to the file
-    public void recalculateAndSave(TransactionRental transaction){
-        if (transaction == null) return;
+    // re-check all promotions against the transaction's current items, apply the
+    // best one, then save everything to the file
+    public void recalculateAndSave(TransactionRental transaction) {
+        if (transaction == null)
+            return;
         PromotionManager.applyBestPromotion(transaction, getLinkedBooking(transaction));
         saveTransactions();
     }
 
-    //print a summary table of every transaction so staff can find the ID they need
-    public void displayAllTransactions(){
-        if (transactionList.isEmpty()){
+    // print a summary table of every transaction so staff can find the ID they need
+    public void displayAllTransactions() {
+        if (transactionList.isEmpty()) {
             System.out.println("No transactions recorded yet.");
             return;
         }
- 
+
         System.out.println("\n----------------------------------------------------------------------");
-        System.out.printf("%-8s %-20s %-10s %-9s %6s %14s%n", "ID", "Customer", "Type", "Status", "Items", "Payable (RM)");
+        System.out.printf("%-8s %-20s %-10s %-9s %6s %14s%n", "ID", "Customer", "Type", "Status", "Items",
+                "Payable (RM)");
         System.out.println("----------------------------------------------------------------------");
-        for (TransactionRental t : transactionList){
+        for (TransactionRental t : transactionList) {
             System.out.printf("%-8s %-20s %-10s %-9s %6d %14.2f%n",
                     t.getTransactionID(),
                     t.getCustomerName(),
@@ -184,15 +196,14 @@ public class TransactionManager {
         return paid;
     }
 
-    //write transactions in memory to transactions.txt
-    public void saveTransactions(){
-        try (PrintWriter writer = new PrintWriter(new FileWriter("ActiveHub/transactions.txt"))){
- 
- 
-            for (TransactionRental transaction : transactionList){
+    // write transactions in memory to transactions.txt
+    public void saveTransactions() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("transactions.txt"))) {
+
+            for (TransactionRental transaction : transactionList) {
                 StringBuilder itemsStr = new StringBuilder();
                 ArrayList<TransactionItem> items = transaction.getItems();
- 
+
                 for (int i = 0; i < items.size(); i++) {
                     TransactionItem ti = items.get(i);
                     itemsStr.append(ti.getItem().getCode()).append(":").append(ti.getQuantity());
@@ -200,7 +211,7 @@ public class TransactionManager {
                         itemsStr.append(";");
                     }
                 }
- 
+
                 if (itemsStr.length() == 0) {
                     itemsStr.append("NONE");
                 }
@@ -220,14 +231,14 @@ public class TransactionManager {
                         transaction.getPaymentMethod(),
                         (transaction.getPaymentDateTime() != null ? transaction.getPaymentDateTime() : "NONE"));
             }
- 
-        } catch (IOException e){
+
+        } catch (IOException e) {
             System.out.println("An error occurred while trying to save data to transactions.txt: " + e.getMessage());
         }
     }
 
     public void loadTransactions(BookingManager bookingManager, RentalCatalogue rentalCatalogue){
-        File file = new File("ActiveHub/transactions.txt");
+        File file = new File("transactions.txt");
         if (!file.exists()) return;
  
         transactionList.clear();
@@ -261,10 +272,10 @@ public class TransactionManager {
                     }
                     
                     TransactionRental transaction;
- 
-                    if (bookingId != null && bookingManager != null){
+
+                    if (bookingId != null && bookingManager != null) {
                         Booking booking = bookingManager.findBookingByID(bookingId);
- 
+
                         if (booking != null) {
                             transaction = new TransactionRental(id, booking);
                         } else {
@@ -318,10 +329,11 @@ public class TransactionManager {
                     if (id.toUpperCase().startsWith("TRN")){
                         try {
                             int num = Integer.parseInt(id.substring(3));
-                            if (num > maxID){
+                            if (num > maxID) {
                                 maxID = num;
                             }
-                        } catch (NumberFormatException ignored) {}
+                        } catch (NumberFormatException ignored) {
+                        }
                     }
                 }
  
@@ -329,14 +341,10 @@ public class TransactionManager {
             }
  
             this.nextID = maxID + 1;
- 
+
         } catch (IOException e){
             System.out.println("Error loading transactions from file: " + e.getMessage());
         }
     }   
 
-
-
 }
-
-

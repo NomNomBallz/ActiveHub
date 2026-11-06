@@ -12,7 +12,7 @@ public class RentalCatalogue {
     public RentalCatalogue() {
 
         // Read txt file
-        Path filePath = Path.of("ActiveHub/rentalItems.txt");
+        Path filePath = Path.of("rentalItems.txt");
 
         try {
             String content = Files.readString(filePath);
