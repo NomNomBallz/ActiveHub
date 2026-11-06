@@ -74,6 +74,17 @@ public class TransactionManager {
 
     }
 
+    //find a transaction by its booking ID
+    public TransactionRental findTransactionByBookingID(String id){
+        if (id == null) return null;
+        for (TransactionRental transaction : transactionList){
+            if (transaction.getBookingID().equalsIgnoreCase(id.trim())){
+                return transaction;
+            }
+        }
+        return null;
+    }
+
     //find all transactions that a customer made and add them to a single array list
     public ArrayList<TransactionRental> findTransactionsByCustName(String name){
         ArrayList<TransactionRental> results = new ArrayList<TransactionRental>();
@@ -322,7 +333,7 @@ public class TransactionManager {
         } catch (IOException e){
             System.out.println("Error loading transactions from file: " + e.getMessage());
         }
-    }
+    }   
 
 
 

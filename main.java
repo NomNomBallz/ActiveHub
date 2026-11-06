@@ -30,7 +30,7 @@ public class main {
                 case 2 -> System.out.print(rentalCatalogue);
                 case 3 -> createTransaction();
                 case 4 -> applyPromotion();
-                case 5 -> System.out.println("chose 5.");
+                case 5 -> makePayment();
                 case 6 -> System.out.println("chose 6.");
                 case 7 -> {
                     System.out.println("Exiting program!");
@@ -150,7 +150,7 @@ public class main {
                     }
 
                     //if the booking has already been converted into a transaction, return an error
-                    TransactionRental existing = transactionManager.findTransactionByID(linkedBooking.getBookingID());
+                    TransactionRental existing = transactionManager.findTransactionByBookingID(linkedBooking.getBookingID());
                     if (existing != null){
                         System.out.println("Error: Booking " + linkedBooking.getBookingID() + " already has transaction " + existing.getTransactionID() + ".");
                         System.out.println("Use 'Edit Existing Transaction' to add more items to it.");
@@ -367,4 +367,72 @@ public class main {
 
     }
 
+    //5. payment module
+    private static void makePayment(){
+        System.out.println("\n===== PAYMENT MODULE =====");
+ 
+        //only transactions that are still waiting for payment are shown, nothing to do if there are none
+        if (transactionManager.displayPayableTransaction() == 0){
+            return;
+        }
+ 
+        //choose which transaction to pay for
+        TransactionRental transaction = null;
+        while (transaction == null){
+            String id = InputValidator.readString(scanner, "Enter the transaction ID to pay (type 'CANCEL' to abort)");
+ 
+            if (id.equalsIgnoreCase("CANCEL")){
+                System.out.println("Payment aborted!");
+                return;
+            }
+ 
+            transaction = transactionManager.findTransactionByID(id);
+ 
+            if (transaction == null){
+                System.out.println("Error: Transaction ID '" + id + "' not found!");
+            } else if (transaction.isPaid()){
+                System.out.println("Error: Transaction " + transaction.getTransactionID() + " has already been PAID!");
+                transaction = null;
+            } else if (!transaction.canBePaid()){
+                System.out.println("Error: Transaction " + transaction.getTransactionID() + " has no items to pay for!");
+                transaction = null;
+            }
+        }
+ 
+        //make sure the promotion is up to date, then show the final bill before asking for payment
+        transactionManager.recalculateAndSave(transaction);
+        transaction.printReceipt();
+ 
+        //the menu only decides which payment object gets created, the payment itself is handled by the object
+        Payment payment = null;
+        while (payment == null){
+            System.out.println("1. Cash");
+            System.out.println("2. Credit / Debit Card");
+            System.out.println("3. E-Wallet");
+            System.out.println("4. Cancel");
+ 
+            int choice = InputValidator.readInt(scanner, "Select a payment method (1-4)");
+ 
+            switch (choice){
+                case 1 -> payment = new CashPayment();
+                case 2 -> payment = new CardPayment();
+                case 3 -> payment = new EWalletPayment();
+                case 4 -> {
+                    System.out.println("Payment aborted!");
+                    return;
+                }
+                default -> System.out.println("Invalid option! Please try again.");
+            }
+        }
+ 
+        //one call for every payment method, each class runs its own steps (polymorphism)
+        boolean paid = payment.processPayment(scanner, transaction.calcFinalAmount());
+ 
+        if (paid && transactionManager.completePayment(transaction, payment.getMethodName())){
+            System.out.println("\nPayment successful! Transaction " + transaction.getTransactionID() + " is now PAID.");
+            transaction.printReceipt();
+        } else {
+            System.out.println("\nPayment was not completed. Transaction " + transaction.getTransactionID() + " is still " + transaction.getPaymentStatus() + ".");
+        }
+    }
 }
