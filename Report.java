@@ -61,12 +61,6 @@ public class Report {
         }
 
         for (TransactionRental t : transactionList) {
-            System.out.println("----------------------");
-            System.out.println("Transaction ID: " + t.getTransactionID());
-            System.out.println("Payment Status: " + t.getPaymentStatus());
-            System.out.println("Payment Date: " + t.getPaymentDateTime());
-            System.out.println("Is Paid: " + t.isPaid());
-            System.out.println("Is Paid Today: " + t.isPaidToday());
 
             if (t.isPaidToday()) {
                 paidTransactions.add(t);
