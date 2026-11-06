@@ -83,7 +83,7 @@ public class TransactionManager {
     public TransactionRental findTransactionByBookingID(String id){
         if (id == null) return null;
         for (TransactionRental transaction : transactionList){
-            if (transaction.getBookingID().equalsIgnoreCase(id.trim())){
+            if (id.trim().equalsIgnoreCase(transaction.getBookingID())){
                 return transaction;
             }
         }
